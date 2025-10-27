@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LOST MC — Dashboard</title>
+<link rel="website icon" type="png" href="images/lostmc-icon.png">
+<style>
+  :root {
+    --violett: #8b5cf6;
+    --violett-dark: #6d28d9;
+    --bg: #0d0d0d;
+    --text: #f5f5f5;
+    --card-bg: #1a1a1a;
+    --card-hover: #2e2e2e;
+  }
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #181818;
+    border-bottom: 1px solid var(--violett-dark);
+  }
+  header h1 { color: var(--violett); font-size: 22px; margin: 0; }
+
+  .top-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .top-buttons a {
+    color: var(--text);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--violett-dark);
+    transition: background .2s;
+  }
+  .top-buttons a:hover { background: var(--violett-dark); }
+
+  .admin-login {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .admin-status {
+    color: #fff;
+    font-weight: bold;
+    display: none;
+  }
+  .admin-login input {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--violett-dark);
+    background: #1a1a1a;
+    color: var(--text);
+  }
+  .admin-login button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--violett-dark);
+    background: var(--violett-dark);
+    color: white;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .admin-login button:hover { background: var(--violett); }
+
+  main {
+    padding: 40px 20px;
+    text-align: center;
+  }
+  main h2 { color: var(--violett); margin-bottom: 30px; }
+
+  .menu-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  .menu-buttons a {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 500;
+    border-radius: 12px;
+    text-decoration: none;
+    border: 1px solid #2b2b2b;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .menu-buttons a:hover {
+    background: var(--card-hover);
+    border-color: var(--violett);
+    transform: translateY(-2px);
+  }
+
+  .admin-btn {
+    background: var(--violett-dark);
+    border: 1px solid var(--violett);
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .admin-btn:hover { background: var(--violett); }
+
+  .popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--violett-dark);
+    padding: 10px 15px;
+    border-radius: 6px;
+    color:white;
+    font-weight:bold;
+    opacity:0;
+    transition:opacity 0.3s;
+    z-index:999;
+  }
+  .popup.active { opacity:1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LOST MC Dashboard</h1>
+  <div class="top-buttons" id="adminButtons"></div>
+<div class="admin-login">
+  <span class="admin-status" id="adminStatus">Angemeldet als: Admin</span>
+  <input type="password" id="adminPass" placeholder="Admin Passwort">
+  <button onclick="loginAdmin()">Login</button>
+  <button onclick="logoutAdmin()">Abmelden</button>
+</div>
+
+</header>
+
+<main>
+  <h2>Wähle im Menü die gewünschte Übersicht</h2>
+  <div class="menu-buttons">
+    <a href="arbeiter.html">Arbeiter</a>
+    <a href="routenpartner.html">Routenpartner</a>
+    <a href="eingekauft.html">Eingekauft</a>
+    <a href="arbeiterliste.html" class="admin-btn" id="adminLink" style="display:none;">Arbeiterliste (Admin)</a>
+  </div>
+</main>
+
+<div id="popup" class="popup"></div>
+
+<script>
+const ADMIN_PASSWORD = "admin123"; // geändertes Passwort hier eintragen
+
+// Prüfen, ob Admin angemeldet und Passwort noch stimmt
+window.addEventListener('DOMContentLoaded', () => {
+  const storedAdmin = localStorage.getItem('isAdmin') === 'true';
+  const storedPw = localStorage.getItem('adminPassword');
+  
+  if(storedAdmin && storedPw === ADMIN_PASSWORD){
+    document.getElementById('adminStatus').style.display = "inline";
+    document.getElementById('adminLink').style.display = "block";
+  } else {
+    localStorage.setItem('isAdmin','false'); // alten Status entfernen
+    localStorage.setItem('adminPassword','');
+  }
+});
+
+function loginAdmin(){
+  const pw = document.getElementById('adminPass').value;
+  if(pw === ADMIN_PASSWORD){
+    localStorage.setItem('isAdmin', 'true'); 
+    localStorage.setItem('adminPassword', ADMIN_PASSWORD); // Passwort speichern
+    document.getElementById('adminStatus').style.display = "inline";
+    document.getElementById('adminLink').style.display = "block";
+    showPopup("Admin erfolgreich angemeldet!");
+  } else {
+    localStorage.setItem('isAdmin','false');
+    localStorage.setItem('adminPassword','');
+    showPopup("Falsches Passwort!");
+  }
+  document.getElementById('adminPass').value = "";
+}
+
+function logoutAdmin(){
+  localStorage.setItem('isAdmin','false');
+  localStorage.setItem('adminPassword','');
+  document.getElementById('adminStatus').style.display = "none";
+  document.getElementById('adminLink').style.display = "none";
+  showPopup("Admin abgemeldet!");
+}
+
+function showPopup(msg){
+  const popup = document.getElementById('popup');
+  popup.textContent = msg;
+  popup.classList.add('active');
+  setTimeout(()=>{ popup.classList.remove('active'); },2000);
+}
+</script>
+</body>
+</html>
+
